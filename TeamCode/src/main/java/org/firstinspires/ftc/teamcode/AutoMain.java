@@ -96,11 +96,8 @@ public class AutoMain extends LinearOpMode {
         rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //Sets encoders to go to position
-        leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //rightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //leftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //todo - test ^
+        leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //Servo init
         l2Glyph.setDirection(Servo.Direction.REVERSE);
@@ -146,50 +143,79 @@ public class AutoMain extends LinearOpMode {
 
             if (jewelPosition.equals("BLUE_RED")) {
                 //turn to jewel position
-                leftDrive.setTargetPosition((int) encoderInch);
-                rightDrive.setTargetPosition((int) encoderInch);
-                leftDrive.setPower(tSpeed);
-                rightDrive.setPower(-tSpeed);
-
-                leftDrive.setTargetPosition((int) encoderInch);
-                rightDrive.setTargetPosition((int) encoderInch);
-                leftDrive.setPower(-tSpeed);
-                rightDrive.setPower(tSpeed);
+                encoderDrive(tSpeed, 3, -3, 0.5);
+                encoderDrive(tSpeed, -3, 3, 0.5);
 
             } else if (jewelPosition.equals("RED_BLUE")) {
                 //turn to knock jewel
-                leftDrive.setTargetPosition((int) encoderInch);
-                rightDrive.setTargetPosition((int) encoderInch);
-                leftDrive.setPower(-tSpeed);
-                rightDrive.setPower(tSpeed);
+                encoderDrive(tSpeed, 3, -3, 0.5);
+                encoderDrive(tSpeed, -3, 3, 0.5);
+            }
+            //recenter jewel arm
+            jewelArm.setPosition(0.6);
 
-                //return to start position
-                leftDrive.setTargetPosition((int) encoderInch);
-                rightDrive.setTargetPosition((int) encoderInch);
-                leftDrive.setPower(-tSpeed);
-                rightDrive.setPower(tSpeed);
+            //cryptobox key paths
+
+            //Left key
+            if (boxKey == 1) {
+                encoderDrive(fwdSpeed, 25, 25, 1.0);
+                encoderDrive(tSpeed, 5, -5, 2.0);
+                encoderDrive(fwdSpeed, 35, 35, 2.0);
+            //Right Key
+            } else if (boxKey == 2) {
+                encoderDrive(fwdSpeed, 21, 21, 1.0);
+                encoderDrive(tSpeed, 5, -5, 2.0);
+                encoderDrive(fwdSpeed, 35, 35, 2.0);
+
+             //Center key
+            } else if (boxKey == 3) {
+                encoderDrive(fwdSpeed, 23, 23, 1.0);
+                encoderDrive(tSpeed, 5, -5, 2.0);
+                encoderDrive(fwdSpeed, 35, 35, 2.0);
             }
 
-
         }
+        l1Glyph.setPosition(0.0);
+        l2Glyph.setPosition(0.0);
+        r1Glyph.setPosition(1.0);
+        r2Glyph.setPosition(0.0);
 
-
-        // Initialization of Hardware Values
-        //Initialization of Motor Encoders
-        //Initialization of Servos
-
-
-        //Start Game
-        //Grab Glyph
-        //Scan VuMark
-        //Push vumark position to telemetry
-        //Use DogeCV to detect jewel
-        //Lower servo arm
-        //Turn based on DogeCV value
-
-        //Set encoders to run to positions based on value of VuMark
-        //Lower Arm
-        //Drop Glyph
         telemetry.addData("Path", "Complete");
+    }
+
+    public void encoderDrive(double speed, double leftInch,
+                             double rightInch, double stopTime) {
+        int lTarget, rTarget;
+        if (opModeIsActive()) {
+            lTarget = leftDrive.getCurrentPosition() + (int) (leftInch * encoderInch);
+            rTarget = rightDrive.getCurrentPosition() + (int) (rightInch * encoderInch);
+            leftDrive.setTargetPosition(lTarget);
+            rightDrive.setTargetPosition(rTarget);
+
+            runtime.reset();
+            leftDrive.setPower(Math.abs(speed));
+            rightDrive.setPower(Math.abs(speed));
+
+
+            while (opModeIsActive() &&
+                    (runtime.seconds() < stopTime) &&
+                    (leftDrive.isBusy() && rightDrive.isBusy())) {
+
+                // Display it for the driver.
+                //telemetry.addData("Path1", "Running to %7d :%7d", lTarget, rTarget);
+                //telemetry.addData("Path2", "Running at %7d :%7d",
+                //        leftDrive.getCurrentPosition(),
+                //       rightDrive.getCurrentPosition());
+                //telemetry.update();
+            }
+
+            // Stop all motion;
+            leftDrive.setPower(0);
+            rightDrive.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
     }
 }

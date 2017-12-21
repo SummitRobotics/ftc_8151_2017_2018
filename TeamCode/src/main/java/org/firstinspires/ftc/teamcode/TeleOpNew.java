@@ -143,6 +143,9 @@ public class TeleOpNew extends OpMode
      */
     @Override
     public void stop() {
+        leftDrive.setPower(0);
+        rightDrive.setPower(0);
     }
 
 }
+
